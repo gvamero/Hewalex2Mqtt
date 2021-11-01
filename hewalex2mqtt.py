@@ -8,7 +8,7 @@ from hewalex_geco.devices import PCWU, ZPS
 import paho.mqtt.client as mqtt
 
 # polling interval
-get_status_interval = 15.0
+get_status_interval = 150.0
 
 # Controller (Master)
 conHardId = 1
@@ -113,12 +113,16 @@ def start_mqtt():
         client.username_pw_set(username=_MQTT_user, password=_MQTT_pass)
     client.on_connect = on_connect_mqtt
     client.on_disconnect = on_disconnect_mqtt
-    client.on_message = on_message_mqtt
-    client.subscribe('HewaGate/#', qos=1)
-    client.connect(_MQTT_ip, _MQTT_port)
-    client.loop_start()    
+    client.on_message = on_message_mqtt        
+    #client.subscribe('HewaGate/#', qos=1)    
+    client.connect(_MQTT_ip, _MQTT_port)  
+    if (_Device_Pcwu_Enabled):
+        print('subscribed to : ' + _Device_Pcwu_MqttTopic + '/Command/#')    
+        client.subscribe(_Device_Pcwu_MqttTopic + '/Command/#', qos=1)
 
-def on_connect_mqtt(client, userdata, flags, rc):
+    client.loop_start()
+
+def on_connect_mqtt(client, userdata, flags, r):
     print("Mqtt: Connected to broker. ")
     global flag_connected_mqtt
     flag_connected_mqtt = 1
@@ -128,16 +132,26 @@ def on_disconnect_mqtt(client, userdata, rc):
     global flag_connected_mqtt
     flag_connected_mqtt = 0
 
-def on_message_mqtt(client, userdata, message):
+def on_message_mqtt(client, userdata, message):    
     try:        
         payload = str(message.payload.decode())
         topic = str(message.topic)
+        arr = topic.split('/')
+        # PCWU Command 
+        if len(arr) == 3 and arr[0] == _Device_Pcwu_MqttTopic and arr[1] == 'Command':            
+            command = arr[2]
+            print('Recieved PCWU command ' + topic)
+            writePcwuConfig(command, payload)
+        else:
+            print('cannot process message on topic ' + topic)
+
     except Exception as e:
-            print('Exception in on_message_mqtt: '+ str(e))
+        print('Exception in on_message_mqtt: '+ str(e))
 
 # onMessage handler
 def onMessage(obj, h, sh, m):
     print('serial message recieved')
+
 
     if flag_connected_mqtt != 1:
         return False
@@ -191,6 +205,12 @@ def readPcwuConfig():
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Pcwu_Address, _Device_Pcwu_Port))
     dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, onMessage)            
     dev.readConfigRegisters(ser)
+    ser.close()
+
+def writePcwuConfig(registerName, payload):    
+    ser = serial.serial_for_url("socket://%s:%s" % (_Device_Pcwu_Address, _Device_Pcwu_Port))
+    dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, onMessage)            
+    dev.write(ser, registerName, payload)
     ser.close()
 
 if __name__ == "__main__":

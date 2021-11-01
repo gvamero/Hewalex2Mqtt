@@ -278,7 +278,29 @@ class BaseDevice:
         r = ser.read(1000)
         return self.processAllMessages(r)
 
-
+    def write(self, ser, registername, value):
+        reg = 0
+        type = ''
+        # look for register based on name
+        for k, v in self.registers.items():
+            if v['name'] == registername:
+                reg = k
+                type = v['type']
+                break
+        # check if valid config register
+        if reg >= self.REG_CONFIG_START:
+            # check value is correct according to type. For now only bool is accepted.
+            if type == 'bool':
+                if value == 'True' or value == '1':
+                    value = 1
+                elif value == 'False' or value == '0':
+                    value = 0
+                if value != 0 and value != 1:
+                    return False
+                print('self.writeRegister(ser, ' + str(reg) + ', '+ str(value) + ')')
+            else:
+                return False
+                
 # Interface to implement in child classes
 #########################################
 

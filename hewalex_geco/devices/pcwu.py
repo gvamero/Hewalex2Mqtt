@@ -96,3 +96,9 @@ class PCWU(BaseDevice):
 
     def enable(self, ser):
         return self.writeRegister(ser, 304, 1)
+
+
+
+            
+
+                    
