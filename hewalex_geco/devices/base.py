@@ -278,6 +278,54 @@ class BaseDevice:
         r = ser.read(1000)
         return self.processAllMessages(r)
 
+    def write(self, ser, registername, val):
+        regnum = 0        
+        # look for register based on name        
+        for k, v in self.registers.items():
+            if v['name'] == registername:
+                regnum = k
+                break      
+        reg = self.registers.get(regnum, None)
+        if reg:
+            val = self.parseRegisterValue(reg, val)
+            if val is not None:
+                #print('self.writeRegister(ser, ' + str(regnum) + ', '+ str(val) + ')')
+                return self.writeRegister(ser, regnum, val)
+        return None
+        
+    def parseRegisterValue(self, reg, val):
+        if val:                
+            if reg['type'] == 'date':
+                val = None
+            elif reg['type'] == 'time':
+                val = None
+            elif reg['type'] == 'word':
+                val = int(val)
+            elif reg['type'] == 'rwrd':
+                val = int(val)
+            elif reg['type'] == 'dwrd':
+                val = int(val)
+            elif reg['type'] == 'temp':
+                val = int(val)
+            elif reg['type'] == 'te10':
+                val = int(val) * 10
+            elif reg['type'] == 'fl10':
+                val = float(val) * 10
+            elif reg['type'] == 'f100':
+                val = float(val) * 100
+            elif reg['type'] == 'bool':
+                if val == 'True' or val == '1':
+                    val = 1
+                elif val == 'False' or val == '0':
+                    val = 0
+            elif reg['type'] == 'mask':
+                val = None
+            elif reg['type'] == 'tprg':
+                val = None
+            if reg['options'] and val not in reg['options']:
+                print ('invalid option ' + str(val))
+                val = None
+            return val
 
 # Interface to implement in child classes
 #########################################
