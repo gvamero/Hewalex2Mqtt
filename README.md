@@ -5,6 +5,15 @@ Also, all of this software is provided AS-IS with no implied warranty or liabili
 
 Mqtt gateway for hewalex heat pumps and solar pumps.
 
+Solar Pump Hewalex / Geco controllers
+G-422-P09
+G-422-P09A
+
+Heat Pump (Hewalex solmax)
+PCWU 2.5kW
+PCWU 3.0kW
+
+
 Provides read and write access on mqtt topics. A typical use case is integration of hewalex solar pumps and/or heat pumps in Home Automation (HA) software.
 This script is based on a domotics plugin. So if you use domotics a ready made plugin is available at: xx
 
@@ -20,16 +29,14 @@ You can buy a (cheap) wifi 2 rs485 or ethernet 2 rs485 device wich you attach to
 Remove the plastic case and open up the "fuse box". In here you will find a spre rs485 connector. Remove it and screw in a 4 strand wire. Connect the wire to the rs485wifi device.
 Make sure you connect them correctly. It is wise to measure ac and grnd to be sure!
 
-In the controller, navigate to rs485 settings. Change baud rate to 38500, ?? to 2 and ?? to 2.
+In the controller, navigate to rs485 settings. Change baud rate to 38500, Actual address to 2 and Logic address to 2.
 
 Setup the rs485-to-wifi device. Make sure baud settings match above settings.
 It is probably wise to assign static ip-address. Take note of this.
 
-RS485 to Wi-Fi device setup and either eavesdropping on the communication between the G-426 controller and the PCWU or communicating directly to the PCWU over a dedicated RS485 port. Eavesdropping is easier to setup and allows reading temperatures but does not allow control over the pump. See https://github.com/mvdklip/hewalex-geco-protocol/tree/main/docs/PCWU for more information.
-
 ### Solar pumps (ZPS) setup
 
-RS485 to Wi-Fi device setup and connected to the RS485 port on the backside of the G-422 controller. https://github.com/mvdklip/hewalex-geco-protocol/tree/main/docs/ZPS for more information.
+Remove G-422 controller from the casing. Connect the RS485 port on the backside of the G-422 controller to the wifi controller. 
 
 ## Software Prerequisities
 
@@ -59,17 +66,17 @@ When you are using docker, make sure to set the environment variables. Or use th
 | MQTT_ip | 192.168.1.2
 | MQTT_port | 1883
 | MQTT_authentication | True
-| MQTT_user | mosquitto
-| MQTT_pass | zoemzoem
+| MQTT_user | 
+| MQTT_pass | 
 | MQTT_GatewayDevice_Topic | HewaGate
 
 **ZPS**
 | Parameter | Value |
 | ----------------------- | ----------- |
-| Device_Zps_Enabled = False
-| Device_Zps_Address = IP of the RS485 to Wi-Fi device eg. 192.168.1.7
-| Device_Zps_Port = Port of the RS485 to Wi-Fi device eg. 8899
-| Device_Zps_MqttTopic = SolarBoiler
+| Device_Zps_Enabled | False
+| Device_Zps_Address | IP of the RS485 to Wi-Fi device eg. 192.168.1.7
+| Device_Zps_Port | Port of the RS485 to Wi-Fi device eg. 8899
+| Device_Zps_MqttTopic | SolarBoiler
 
 
 **Pcwu**
@@ -82,10 +89,13 @@ When you are using docker, make sure to set the environment variables. Or use th
 
 
 ### Docker
-A pre made docker image is available as XX. 
+A pre made docker image is available at XX. 
 
 
 ## MQTT Topics
+
+There are 2 kinds of topics: state and command. 
+Command topics (marked command) allow the sending of commands to topics to control equipment.
 
 ### Solar Pump
 | Topic | Description |
@@ -276,6 +286,6 @@ A pre made docker image is available as XX.
 ## Acknowledgements
 
 Based on
-https://github.com/mvdklip/Domoticz-Hewalex
-https://www.elektroda.pl/rtvforum/topic3499254.html 
-https://github.com/aelias-eu/hewalex-geco-protocol
+* https://github.com/mvdklip/Domoticz-Hewalex
+* https://www.elektroda.pl/rtvforum/topic3499254.html 
+* https://github.com/aelias-eu/hewalex-geco-protocol
