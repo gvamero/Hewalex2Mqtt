@@ -289,8 +289,8 @@ class BaseDevice:
         if reg:
             val = self.parseRegisterValue(reg, val)
             if val is not None:
-                print('self.writeRegister(ser, ' + str(regnum) + ', '+ str(val) + ')')
-                #return self.writeRegister(ser, regnum, val)
+                #print('self.writeRegister(ser, ' + str(regnum) + ', '+ str(val) + ')')
+                return self.writeRegister(ser, regnum, val)
         return None
         
     def parseRegisterValue(self, reg, val):

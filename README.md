@@ -89,7 +89,7 @@ When you are using docker, make sure to set the environment variables. Or use th
 
 
 ### Docker
-A pre made docker image is available at XX. 
+A pre made docker image is available at [todo]. 
 
 
 ## MQTT Topics

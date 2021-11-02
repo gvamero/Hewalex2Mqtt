@@ -188,17 +188,19 @@ def readZPSConfig():
     dev.readStatusRegisters(ser)
     ser.close()
 
-def printZPSMqttTopics():        
+def printZPSMqttTopics():
+    print('| Topic | Type | Description | ')
+    print('| ----------------------- | ----------- | ---------------------------')
     dev = ZPS(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)
     for k, v in dev.registers.items():
         if isinstance(v['name'] , list):
             for i in v['name']:
                 if i:
-                    print(_Device_Zps_MqttTopic + '/' + str(i))
+                    print('| ' + _Device_Zps_MqttTopic + '/' + str(i)+ ' | ' + v['type'] + ' | ' + str(v.get('desc')))
         else:
-            print(_Device_Zps_MqttTopic + '/' + str(v['name']))
+            print('| ' + _Device_Zps_MqttTopic + '/' + str(v['name'])+ ' | ' + v['type'] + ' | ' + str(v.get('desc')))
         if k > dev.REG_CONFIG_START:          
-            print(_Device_Zps_MqttTopic + '/Command/' + str(v['name']))    
+            print('| ' + _Device_Zps_MqttTopic + '/Command/' + str(v['name'])+ ' | ' + v['type'] + ' | ' + str(v.get('desc')))
 
 def readPCWU():    
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Pcwu_Address, _Device_Pcwu_Port))
@@ -222,20 +224,23 @@ def writePcwuConfig(registerName, payload):
     ser.close()
 
 def printPcwuMqttTopics():        
+    print('| Topic | Type | Description | ')
+    print('| ----------------------- | ----------- | ---------------------------')
     dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)
     for k, v in dev.registers.items():
         if isinstance(v['name'] , list):
             for i in v['name']:
                 if i:
-                    print(_Device_Pcwu_MqttTopic + '/' + str(i))
+                    print('| ' + _Device_Pcwu_MqttTopic + '/' + str(i) + ' | ' + v['type'] + ' | ' + str(v.get('desc')))
         else:
-            print(_Device_Pcwu_MqttTopic + '/' + str(v['name']))
+            print('| ' +_Device_Pcwu_MqttTopic + '/' + str(v['name'])+ ' | ' + v['type'] + ' | ' + str(v.get('desc')))
         if k > dev.REG_CONFIG_START:          
-            print(_Device_Pcwu_MqttTopic + '/Command/' + str(v['name']))
+            print('| ' + _Device_Pcwu_MqttTopic + '/Command/' + str(v['name']) + ' | ' + v.get('type') + ' | ' + str(v.get('desc')))
 
 if __name__ == "__main__":
     initConfiguration()
-    printPcwuMqttTopics()
-    printZPSMqttTopics()
+    # for generating topic list in readme
+    # printPcwuMqttTopics()
+    # printZPSMqttTopics()
     start_mqtt()
     device_readregisters_enqueue()
