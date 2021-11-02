@@ -99,6 +99,7 @@ Command topics (marked command) allow the sending of commands to topics to contr
 
 ### Solar Pump
 | Topic | Type | Description |
+print('| ----------------------- | ----------- | ---------------------------')
 | SolarBoiler/date | date | Date
 | SolarBoiler/time | time | Time
 | SolarBoiler/T1 | temp | T1 (Collectors temp)
@@ -229,6 +230,7 @@ Command topics (marked command) allow the sending of commands to topics to contr
 
 ### Heat Pump
 | Topic | Type | Description | 
+| ----------------------- | ----------- | ---------------------------')
 | Heatpump/date | date | Date
 | Heatpump/time | time | Time
 | Heatpump/T1 | te10 | T1 (Ambient temp)
