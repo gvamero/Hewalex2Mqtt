@@ -114,12 +114,10 @@ def start_mqtt():
     client.on_connect = on_connect_mqtt
     client.on_disconnect = on_disconnect_mqtt
     client.on_message = on_message_mqtt        
-    #client.subscribe('HewaGate/#', qos=1)    
     client.connect(_MQTT_ip, _MQTT_port)  
     if (_Device_Pcwu_Enabled):
         print('subscribed to : ' + _Device_Pcwu_MqttTopic + '/Command/#')    
         client.subscribe(_Device_Pcwu_MqttTopic + '/Command/#', qos=1)
-
     client.loop_start()
 
 def on_connect_mqtt(client, userdata, flags, r):
@@ -148,11 +146,7 @@ def on_message_mqtt(client, userdata, message):
     except Exception as e:
         print('Exception in on_message_mqtt: '+ str(e))
 
-# onMessage handler
-def onMessage(obj, h, sh, m):
-    print('serial message recieved')
-
-
+def on_message_serial(obj, h, sh, m):
     if flag_connected_mqtt != 1:
         return False
     
@@ -184,36 +178,64 @@ def device_readregisters_enqueue():
 
 def readZPS():
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Zps_Address, _Device_Zps_Port))
-    dev = ZPS(conHardId, conSoftId, devHardId, devSoftId, onMessage)        
+    dev = ZPS(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)        
     dev.readStatusRegisters(ser)
     ser.close()
 
 def readZPSConfig():
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Zps_Address, _Device_Zps_Port))
-    dev = ZPS(conHardId, conSoftId, devHardId, devSoftId, onMessage)        
+    dev = ZPS(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)        
     dev.readStatusRegisters(ser)
     ser.close()
 
+def printZPSMqttTopics():        
+    dev = ZPS(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)
+    for k, v in dev.registers.items():
+        if isinstance(v['name'] , list):
+            for i in v['name']:
+                if i:
+                    print(_Device_Zps_MqttTopic + '/' + str(i))
+        else:
+            print(_Device_Zps_MqttTopic + '/' + str(v['name']))
+        if k > dev.REG_CONFIG_START:          
+            print(_Device_Zps_MqttTopic + '/Command/' + str(v['name']))    
+
 def readPCWU():    
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Pcwu_Address, _Device_Pcwu_Port))
-    dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, onMessage)        
-    dev.readStatusRegisters(ser)
-    dev.readConfigRegisters(ser)
+    dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)        
+    dev.readStatusRegisters(ser)    
     ser.close()   
 
 def readPcwuConfig():    
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Pcwu_Address, _Device_Pcwu_Port))
-    dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, onMessage)            
+    dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)            
     dev.readConfigRegisters(ser)
     ser.close()
 
 def writePcwuConfig(registerName, payload):    
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Pcwu_Address, _Device_Pcwu_Port))
-    dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, onMessage)            
-    dev.write(ser, registerName, payload)
+    dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)            
+    if dev.write(ser, registerName, payload):
+        print('written to serial')
+    else:
+        print('unable to write to serial. Check register (topic) name and value. ')
     ser.close()
+
+def printPcwuMqttTopics():        
+    dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)
+    for k, v in dev.registers.items():
+        if isinstance(v['name'] , list):
+            for i in v['name']:
+                if i:
+                    print(_Device_Pcwu_MqttTopic + '/' + str(i))
+        else:
+            print(_Device_Pcwu_MqttTopic + '/' + str(v['name']))
+        if k > dev.REG_CONFIG_START:          
+            print(_Device_Pcwu_MqttTopic + '/Command/' + str(v['name']))
 
 if __name__ == "__main__":
     initConfiguration()
+    printPcwuMqttTopics()
+    printZPSMqttTopics()
     start_mqtt()
     device_readregisters_enqueue()
