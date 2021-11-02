@@ -15,7 +15,7 @@ PCWU 3.0kW
 
 
 Provides read and write access on mqtt topics. A typical use case is integration of hewalex solar pumps and/or heat pumps in Home Automation (HA) software.
-This script is based on a domotics plugin. So if you use domotics a ready made plugin is available at: xx
+This script is based on a domoticz plugin. So if you use domoticz a ready made plugin is available at: https://github.com/mvdklip/Domoticz-Hewalex
 
 ## Hardware Prerequisites
 
@@ -98,190 +98,188 @@ There are 2 kinds of topics: state and command.
 Command topics (marked command) allow the sending of commands to topics to control equipment.
 
 ### Solar Pump
-| Topic | Description |
-| ----------------------- | ----------- |
-| SolarBoiler/date |
-| SolarBoiler/time |
-| SolarBoiler/T1 |
-| SolarBoiler/T2 |
-| SolarBoiler/T3 |
-| SolarBoiler/T4 |
-| SolarBoiler/T5 |
-| SolarBoiler/T6 |
-| SolarBoiler/CollectorPower |
-| SolarBoiler/Consumption |
-| SolarBoiler/CollectorActive |
-| SolarBoiler/FlowRate |
-| SolarBoiler/CollectorPumpON |
-| SolarBoiler/CirculationPumpON |
-| SolarBoiler/CollectorPumpSpeed |
-| SolarBoiler/TotalEnergy |
-| SolarBoiler/InstallationScheme |
-| SolarBoiler/DisplayTimeout |
-| SolarBoiler/Command/DisplayTimeout |
-| SolarBoiler/DisplayBrightness |
-| SolarBoiler/Command/DisplayBrightness |
-| SolarBoiler/AlarmSoundEnabled |
-| SolarBoiler/Command/AlarmSoundEnabled | 
-| SolarBoiler/KeySoundEnabled |
-| SolarBoiler/Command/KeySoundEnabled |
-| SolarBoiler/DisplayLanguage |
-| SolarBoiler/Command/DisplayLanguage |
-| SolarBoiler/FluidFreezingTemp |
-| SolarBoiler/Command/FluidFreezingTemp |
-| SolarBoiler/FlowRateNominal |
-| SolarBoiler/Command/FlowRateNominal |
-| SolarBoiler/FlowRateMeasurement |
-| SolarBoiler/Command/FlowRateMeasurement |
-| SolarBoiler/FlowRateWeight |
-| SolarBoiler/Command/FlowRateWeight |
-| SolarBoiler/HolidayEnabled |
-| SolarBoiler/Command/HolidayEnabled |
-| SolarBoiler/HolidayStartDay |
-| SolarBoiler/Command/HolidayStartDay |
-| SolarBoiler/HolidayStartMonth |
-| SolarBoiler/Command/HolidayStartMonth |
-| SolarBoiler/HolidayStartYear |
-| SolarBoiler/Command/HolidayStartYear |
-| SolarBoiler/HolidayEndDay |
-| SolarBoiler/Command/HolidayEndDay |
-| SolarBoiler/HolidayEndMonth |
-| SolarBoiler/Command/HolidayEndMonth |
-| SolarBoiler/HolidayEndYear |
-| SolarBoiler/Command/HolidayEndYear |
-| SolarBoiler/CollectorType |
-| SolarBoiler/Command/CollectorType |
-| SolarBoiler/CollectorPumpHysteresis |
-| SolarBoiler/Command/CollectorPumpHysteresis |
-| SolarBoiler/ExtraPumpHysteresis |
-| SolarBoiler/Command/ExtraPumpHysteresis |
-| SolarBoiler/CollectorPumpMaxTemp |
-| SolarBoiler/Command/CollectorPumpMaxTemp |
-| SolarBoiler/BoilerPumpMinTemp |
-| SolarBoiler/Command/BoilerPumpMinTemp |
-| SolarBoiler/HeatSourceMaxTemp |
-| SolarBoiler/Command/HeatSourceMaxTemp |
-| SolarBoiler/BoilerPumpMaxTemp |
-| SolarBoiler/Command/BoilerPumpMaxTemp |
-| SolarBoiler/PumpRegulationEnabled |
-| SolarBoiler/Command/PumpRegulationEnabled |
-| SolarBoiler/HeatSourceMaxCollectorPower |
-| SolarBoiler/Command/HeatSourceMaxCollectorPower |
-| SolarBoiler/CollectorOverheatProtEnabled |
-| SolarBoiler/Command/CollectorOverheatProtEnabled |
-| SolarBoiler/CollectorOverheatProtMaxTemp |
-| SolarBoiler/Command/CollectorOverheatProtMaxTemp |
-| SolarBoiler/CollectorFreezingProtEnabled |
-| SolarBoiler/Command/CollectorFreezingProtEnabled |
-| SolarBoiler/HeatingPriority |
-| SolarBoiler/Command/HeatingPriority |
-| SolarBoiler/LegionellaProtEnabled |
-| SolarBoiler/Command/LegionellaProtEnabled |
-| SolarBoiler/LockBoilerKWithBoilerC |
-| SolarBoiler/Command/LockBoilerKWithBoilerC |
-| SolarBoiler/NightCoolingEnabled |
-| SolarBoiler/Command/NightCoolingEnabled |
-| SolarBoiler/NightCoolingStartTemp |
-| SolarBoiler/Command/NightCoolingStartTemp |
-| SolarBoiler/NightCoolingStopTemp |
-| SolarBoiler/Command/NightCoolingStopTemp |
-| SolarBoiler/NightCoolingStopTime |
-| SolarBoiler/Command/NightCoolingStopTime |
-| SolarBoiler/TimeProgramCM-F |
-| SolarBoiler/Command/TimeProgramCM-F |
-| SolarBoiler/TimeProgramCSat |
-| SolarBoiler/Command/TimeProgramCSat |
-| SolarBoiler/TimeProgramCSun |
-| SolarBoiler/Command/TimeProgramCSun |
-| SolarBoiler/TimeProgramKM-F |
-| SolarBoiler/Command/TimeProgramKM-F |
-| SolarBoiler/TimeProgramKSat |
-| SolarBoiler/Command/TimeProgramKSat |
-| SolarBoiler/TimeProgramKSun |
-| SolarBoiler/Command/TimeProgramKSun |
-| SolarBoiler/CollectorPumpMinRev |
-| SolarBoiler/Command/CollectorPumpMinRev |
-| SolarBoiler/CollectorPumpMaxRev |
-| SolarBoiler/Command/CollectorPumpMaxRev |
-| SolarBoiler/CollectorPumpMinIncTime |
-| SolarBoiler/Command/CollectorPumpMinIncTime |
-| SolarBoiler/CollectorPumpMinDecTime |
-| SolarBoiler/Command/CollectorPumpMinDecTime | 
-| SolarBoiler/CollectorPumpStartupSpeed |
-| SolarBoiler/Command/CollectorPumpStartupSpeed |
-| SolarBoiler/PressureSwitchEnabled |
-| SolarBoiler/Command/PressureSwitchEnabled |
-| SolarBoiler/TankOverheatProtEnabled |
-| SolarBoiler/Command/TankOverheatProtEnabled |
-| SolarBoiler/CirculationPumpEnabled |
-| SolarBoiler/Command/CirculationPumpEnabled |
-| SolarBoiler/CirculationPumpMode |
-| SolarBoiler/Command/CirculationPumpMode |
-| SolarBoiler/CirculationPumpMinTemp |
-| SolarBoiler/Command/CirculationPumpMinTemp |
-| SolarBoiler/CirculationPumpONTime |
-| SolarBoiler/Command/CirculationPumpONTime |
-| SolarBoiler/CirculationPumpOFFTime |
-| SolarBoiler/Command/CirculationPumpOFFTime |
-| SolarBoiler/TotalOperationTime |
-| SolarBoiler/Command/TotalOperationTime |
-| SolarBoiler/Reg320 |
-| SolarBoiler/Command/Reg320 |
+| Topic | Type | Description |
+| SolarBoiler/date | date | Date
+| SolarBoiler/time | time | Time
+| SolarBoiler/T1 | temp | T1 (Collectors temp)
+| SolarBoiler/T2 | temp | T2 (Tank bottom temp)
+| SolarBoiler/T3 | temp | T3 (Air separator temp)
+| SolarBoiler/T4 | temp | T4 (Tank top temp)
+| SolarBoiler/T5 | temp | T5 (Boiler outlet temp)
+| SolarBoiler/T6 | temp | T6
+| SolarBoiler/CollectorPower | word | Collector Power (W)
+| SolarBoiler/Consumption | fl10 | Consumption (W)
+| SolarBoiler/CollectorActive | bool | Collector Active (True/False)
+| SolarBoiler/FlowRate | fl10 | Flow Rate (l/min)
+| SolarBoiler/CollectorPumpON | mask | None
+| SolarBoiler/CirculationPumpON | mask | None
+| SolarBoiler/CollectorPumpSpeed | word | Collector Pump Speed (0-15)
+| SolarBoiler/TotalEnergy | fl10 | Total Energy (kWh)
+| SolarBoiler/InstallationScheme | word | Installation Scheme (1-19)
+| SolarBoiler/DisplayTimeout | word | Display Timeout (1-10 min)
+| SolarBoiler/Command/DisplayTimeout | word | Display Timeout (1-10 min)
+| SolarBoiler/DisplayBrightness | word | Display Brightness (1-10)
+| SolarBoiler/Command/DisplayBrightness | word | Display Brightness (1-10)
+| SolarBoiler/AlarmSoundEnabled | bool | Alarm Sound Enabled (True/False)
+| SolarBoiler/Command/AlarmSoundEnabled | bool | Alarm Sound Enabled (True/False)
+| SolarBoiler/KeySoundEnabled | bool | Key Sound Enabled (True/False)
+| SolarBoiler/Command/KeySoundEnabled | bool | Key Sound Enabled (True/False)
+| SolarBoiler/DisplayLanguage | word | Display Language (0=PL, 1=EN, 2=DE, 3=FR, 4=PT, 5=ES, 6=NL, 7=IT, 8=CZ, 9=SL, ...)
+| SolarBoiler/Command/DisplayLanguage | word | Display Language (0=PL, 1=EN, 2=DE, 3=FR, 4=PT, 5=ES, 6=NL, 7=IT, 8=CZ, 9=SL, ...)
+| SolarBoiler/FluidFreezingTemp | temp | Fluid Freezing Temp
+| SolarBoiler/Command/FluidFreezingTemp | temp | Fluid Freezing Temp
+| SolarBoiler/FlowRateNominal | fl10 | Flow Rate Nominal (l/min)
+| SolarBoiler/Command/FlowRateNominal | fl10 | Flow Rate Nominal (l/min)
+| SolarBoiler/FlowRateMeasurement | word | Flow Rate Measurement (0=Rotameter, 1=Electronic G916, 2=Electronic)
+| SolarBoiler/Command/FlowRateMeasurement | word | Flow Rate Measurement (0=Rotameter, 1=Electronic G916, 2=Electronic)
+| SolarBoiler/FlowRateWeight | f100 | Flow Rate Weight (imp/l)
+| SolarBoiler/Command/FlowRateWeight | f100 | Flow Rate Weight (imp/l)
+| SolarBoiler/HolidayEnabled | bool | Holiday Enabled (True/False)
+| SolarBoiler/Command/HolidayEnabled | bool | Holiday Enabled (True/False)
+| SolarBoiler/HolidayStartDay | word | Holiday Start Day
+| SolarBoiler/Command/HolidayStartDay | word | Holiday Start Day
+| SolarBoiler/HolidayStartMonth | word | Holiday Start Month
+| SolarBoiler/Command/HolidayStartMonth | word | Holiday Start Month
+| SolarBoiler/HolidayStartYear | word | Holiday Start Year
+| SolarBoiler/Command/HolidayStartYear | word | Holiday Start Year
+| SolarBoiler/HolidayEndDay | word | Holiday End Day
+| SolarBoiler/Command/HolidayEndDay | word | Holiday End Day
+| SolarBoiler/HolidayEndMonth | word | Holiday End Month
+| SolarBoiler/Command/HolidayEndMonth | word | Holiday End Month
+| SolarBoiler/HolidayEndYear | word | Holiday End Year
+| SolarBoiler/Command/HolidayEndYear | word | Holiday End Year
+| SolarBoiler/CollectorType | word | Collector Type (0=Flat, 1=Tube)
+| SolarBoiler/Command/CollectorType | word | Collector Type (0=Flat, 1=Tube)
+| SolarBoiler/CollectorPumpHysteresis | temp | Collector Pump Hysteresis (Difference between T1 and T2 to turn on collector pump)
+| SolarBoiler/Command/CollectorPumpHysteresis | temp | Collector Pump Hysteresis (Difference between T1 and T2 to turn on collector pump)
+| SolarBoiler/ExtraPumpHysteresis | temp | Extra Pump Hysteresis (Temp difference to turn on extra pump)
+| SolarBoiler/Command/ExtraPumpHysteresis | temp | Extra Pump Hysteresis (Temp difference to turn on extra pump)
+| SolarBoiler/CollectorPumpMaxTemp | temp | Collector Pump Max Temp (Maximum T2 temp to turn off collector pump)
+| SolarBoiler/Command/CollectorPumpMaxTemp | temp | Collector Pump Max Temp (Maximum T2 temp to turn off collector pump)
+| SolarBoiler/BoilerPumpMinTemp | word | Boiler Pump Min Temp (Minimum T5 temp to turn on boiler pump)
+| SolarBoiler/Command/BoilerPumpMinTemp | word | Boiler Pump Min Temp (Minimum T5 temp to turn on boiler pump)
+| SolarBoiler/HeatSourceMaxTemp | word | Heat Source Max Temp (Maximum T4 temp to turn off heat sources)
+| SolarBoiler/Command/HeatSourceMaxTemp | word | Heat Source Max Temp (Maximum T4 temp to turn off heat sources)
+| SolarBoiler/BoilerPumpMaxTemp | word | Boiler Pump Max Temp (Maximum T4 temp to turn off boiler pump)
+| SolarBoiler/Command/BoilerPumpMaxTemp | word | Boiler Pump Max Temp (Maximum T4 temp to turn off boiler pump)
+| SolarBoiler/PumpRegulationEnabled | bool | Pump Regulation Enabled (True/False)
+| SolarBoiler/Command/PumpRegulationEnabled | bool | Pump Regulation Enabled (True/False)
+| SolarBoiler/HeatSourceMaxCollectorPower | word | Heat Source Max Collector Power (Maximum collector power to turn off heat sources) (100-9900W)
+| SolarBoiler/Command/HeatSourceMaxCollectorPower | word | Heat Source Max Collector Power (Maximum collector power to turn off heat sources) (100-9900W)
+| SolarBoiler/CollectorOverheatProtEnabled | bool | Collector Overheat Protection Enabled (True/False)
+| SolarBoiler/Command/CollectorOverheatProtEnabled | bool | Collector Overheat Protection Enabled (True/False)
+| SolarBoiler/CollectorOverheatProtMaxTemp | temp | Collector Overheat Protection Max Temp (Maximum T2 temp for overheat protection)
+| SolarBoiler/Command/CollectorOverheatProtMaxTemp | temp | Collector Overheat Protection Max Temp (Maximum T2 temp for overheat protection)
+| SolarBoiler/CollectorFreezingProtEnabled | bool | Collector Freezing Protection Enabled (True/False)
+| SolarBoiler/Command/CollectorFreezingProtEnabled | bool | Collector Freezing Protection Enabled (True/False)
+| SolarBoiler/HeatingPriority | word | Heating Priority
+| SolarBoiler/Command/HeatingPriority | word | Heating Priority
+| SolarBoiler/LegionellaProtEnabled | bool | Legionella Protection Enabled (True/False)
+| SolarBoiler/Command/LegionellaProtEnabled | bool | Legionella Protection Enabled (True/False)
+| SolarBoiler/LockBoilerKWithBoilerC | bool | Lock Boiler K With Boiler C (True/False)
+| SolarBoiler/Command/LockBoilerKWithBoilerC | bool | Lock Boiler K With Boiler C (True/False)
+| SolarBoiler/NightCoolingEnabled | bool | Night Cooling Enabled (True/False)
+| SolarBoiler/Command/NightCoolingEnabled | bool | Night Cooling Enabled (True/False)
+| SolarBoiler/NightCoolingStartTemp | temp | Night Cooling Start Temp
+| SolarBoiler/Command/NightCoolingStartTemp | temp | Night Cooling Start Temp
+| SolarBoiler/NightCoolingStopTemp | temp | Night Cooling Stop Temp
+| SolarBoiler/Command/NightCoolingStopTemp | temp | Night Cooling Stop Temp
+| SolarBoiler/NightCoolingStopTime | word | Night Cooling Stop Time (hr)
+| SolarBoiler/Command/NightCoolingStopTime | word | Night Cooling Stop Time (hr)
+| SolarBoiler/TimeProgramCM-F | tprg | Time Program C M-F (True/False per hour of the day)
+| SolarBoiler/Command/TimeProgramCM-F | tprg | Time Program C M-F (True/False per hour of the day)
+| SolarBoiler/TimeProgramCSat | tprg | Time Program C Sat (True/False per hour of the day)
+| SolarBoiler/Command/TimeProgramCSat | tprg | Time Program C Sat (True/False per hour of the day)
+| SolarBoiler/TimeProgramCSun | tprg | Time Program C Sun (True/False per hour of the day)
+| SolarBoiler/Command/TimeProgramCSun | tprg | Time Program C Sun (True/False per hour of the day)
+| SolarBoiler/TimeProgramKM-F | tprg | Time Program K M-F (True/False per hour of the day)
+| SolarBoiler/Command/TimeProgramKM-F | tprg | Time Program K M-F (True/False per hour of the day)
+| SolarBoiler/TimeProgramKSat | tprg | Time Program K Sat (True/False per hour of the day)
+| SolarBoiler/Command/TimeProgramKSat | tprg | Time Program K Sat (True/False per hour of the day)
+| SolarBoiler/TimeProgramKSun | tprg | Time Program K Sun (True/False per hour of the day)
+| SolarBoiler/Command/TimeProgramKSun | tprg | Time Program K Sun (True/False per hour of the day)
+| SolarBoiler/CollectorPumpMinRev | word | Collector Pump Min Rev (rev/min)
+| SolarBoiler/Command/CollectorPumpMinRev | word | Collector Pump Min Rev (rev/min)
+| SolarBoiler/CollectorPumpMaxRev | word | Collector Pump Max Rev (rev/min)
+| SolarBoiler/Command/CollectorPumpMaxRev | word | Collector Pump Max Rev (rev/min)
+| SolarBoiler/CollectorPumpMinIncTime | word | Collector Pump Min Increase Time (s)
+| SolarBoiler/Command/CollectorPumpMinIncTime | word | Collector Pump Min Increase Time (s)
+| SolarBoiler/CollectorPumpMinDecTime | word | Collector Pump Min Decrease Time (s)
+| SolarBoiler/Command/CollectorPumpMinDecTime | word | Collector Pump Min Decrease Time (s)
+| SolarBoiler/CollectorPumpStartupSpeed | word | Collector Pump Startup Speed (1-15)
+| SolarBoiler/Command/CollectorPumpStartupSpeed | word | Collector Pump Startup Speed (1-15)
+| SolarBoiler/PressureSwitchEnabled | bool | Pressure Switch Enabled (True/False)
+| SolarBoiler/Command/PressureSwitchEnabled | bool | Pressure Switch Enabled (True/False)
+| SolarBoiler/TankOverheatProtEnabled | bool | Tank Overheat Protection Enabled (True/False)
+| SolarBoiler/Command/TankOverheatProtEnabled | bool | Tank Overheat Protection Enabled (True/False)
+| SolarBoiler/CirculationPumpEnabled | bool | Circulation Pump Enabled (True/False)
+| SolarBoiler/Command/CirculationPumpEnabled | bool | Circulation Pump Enabled (True/False)
+| SolarBoiler/CirculationPumpMode | word | Circulation Pump Mode (0=Discontinuous, 1=Continuous)
+| SolarBoiler/Command/CirculationPumpMode | word | Circulation Pump Mode (0=Discontinuous, 1=Continuous)
+| SolarBoiler/CirculationPumpMinTemp | temp | Circulation Pump Min Temp (Minimum T4 temp to turn on circulation pump)
+| SolarBoiler/Command/CirculationPumpMinTemp | temp | Circulation Pump Min Temp (Minimum T4 temp to turn on circulation pump)
+| SolarBoiler/CirculationPumpONTime | word | Circulation Pump ON Time (1-59 min)
+| SolarBoiler/Command/CirculationPumpONTime | word | Circulation Pump ON Time (1-59 min)
+| SolarBoiler/CirculationPumpOFFTime | word | Circulation Pump OFF Time (1-59 min)
+| SolarBoiler/Command/CirculationPumpOFFTime | word | Circulation Pump OFF Time (1-59 min)
+| SolarBoiler/TotalOperationTime | dwrd | Total Operation Time (min) - lives in config space but is status register
+| SolarBoiler/Command/TotalOperationTime | dwrd | Total Operation Time (min) - lives in config space but is status register
+| SolarBoiler/Reg320 | word | Unknown register - value changes constantly
+| SolarBoiler/Command/Reg320 | word | Unknown register - value changes constantly
 
 ### Heat Pump
-| Topic | Description | 
-| ----------------------- | ----------- |
-| Heatpump/date | 
-| Heatpump/time | 
-| Heatpump/T1 | 
-| Heatpump/T2 | 
-| Heatpump/T3 | 
-| Heatpump/T6 | 
-| Heatpump/T7 | 
-| Heatpump/T8 | 
-| Heatpump/T9 | 
-| Heatpump/T10 | 
-| Heatpump/IsManual | 
-| Heatpump/FanON | 
-| Heatpump/CirculationPumpON |       
-| Heatpump/HeatPumpON | 
-| Heatpump/CompressorON | 
-| Heatpump/HeaterEON | 
-| Heatpump/EV1 | 
-| Heatpump/WaitingStatus | 
-| Heatpump/InstallationScheme |      
-| Heatpump/HeatPumpEnabled |         
-| Heatpump/Command/HeatPumpEnabled | 
-| Heatpump/TapWaterSensor | 
-| Heatpump/Command/TapWaterSensor |  
-| Heatpump/TapWaterTemp |
-| Heatpump/Command/TapWaterTemp |
-| Heatpump/TapWaterHysteresis |
-| Heatpump/Command/TapWaterHysteresis |
-| Heatpump/AmbientMinTemp |
-| Heatpump/Command/AmbientMinTemp |
-| Heatpump/TimeProgramHPM-F |
-| Heatpump/Command/TimeProgramHPM-F |
-| Heatpump/TimeProgramHPSat |
-| Heatpump/Command/TimeProgramHPSat |
-| Heatpump/TimeProgramHPSun |
-| Heatpump/Command/TimeProgramHPSun |
-| Heatpump/AntiFreezingEnabled |
-| Heatpump/Command/AntiFreezingEnabled |
-| Heatpump/WaterPumpOperationMode |
-| Heatpump/Command/WaterPumpOperationMode |
-| Heatpump/FanOperationMode |
-| Heatpump/Command/FanOperationMode |
-| Heatpump/DefrostingInterval |
-| Heatpump/Command/DefrostingInterval |
-| Heatpump/DefrostingStartTemp |
-| Heatpump/Command/DefrostingStartTemp |
-| Heatpump/DefrostingStopTemp |
-| Heatpump/Command/DefrostingStopTemp |
-| Heatpump/DefrostingMaxTime |
-| Heatpump/Command/DefrostingMaxTime |
-| Heatpump/ExtControllerHPOFF |
-| Heatpump/Command/ExtControllerHPOFF |
+| Topic | Type | Description | 
+| Heatpump/date | date | Date
+| Heatpump/time | time | Time
+| Heatpump/T1 | te10 | T1 (Ambient temp)
+| Heatpump/T2 | te10 | T2 (Tank bottom temp)
+| Heatpump/T3 | te10 | T3 (Tank top temp)
+| Heatpump/T6 | te10 | T6 (HP water inlet temp)
+| Heatpump/T7 | te10 | T7 (HP water outlet temp)
+| Heatpump/T8 | te10 | T8 (HP evaporator temp)
+| Heatpump/T9 | te10 | T9 (HP before compressor temp)
+| Heatpump/T10 | te10 | T10 (HP after compressor temp)
+| Heatpump/IsManual | bool | None
+| Heatpump/FanON | mask | None
+| Heatpump/CirculationPumpON | mask | None
+| Heatpump/HeatPumpON | mask | None
+| Heatpump/CompressorON | mask | None
+| Heatpump/HeaterEON | mask | None
+| Heatpump/EV1 | word | Expansion valve
+| Heatpump/WaitingStatus | word |  0 when available for operation, 2 when disabled through register 304
+| Heatpump/InstallationScheme | word | Installation Scheme (1-9)
+| Heatpump/HeatPumpEnabled | bool | Heat Pump Enabled (True/False)
+| Heatpump/Command/HeatPumpEnabled | bool | Heat Pump Enabled (True/False)
+| Heatpump/TapWaterSensor | word | Temp. sensor controlling heat pump operation [T2,T3,T7, factory setting T2]
+| Heatpump/Command/TapWaterSensor | word | Temp. sensor controlling heat pump operation [T2,T3,T7, factory setting T2]
+| Heatpump/TapWaterTemp | te10 | HUW temperature for heat pump [10-60°C, factory setting 50°C]
+| Heatpump/Command/TapWaterTemp | te10 | HUW temperature for heat pump [10-60°C, factory setting 50°C]
+| Heatpump/TapWaterHysteresis | te10 | Heat pump start-up hysteresis [2-10°C, factory setting 5°C]
+| Heatpump/Command/TapWaterHysteresis | te10 | Heat pump start-up hysteresis [2-10°C, factory setting 5°C]
+| Heatpump/AmbientMinTemp | te10 | Minimum ambient temperature (T1) [-10-10°C]
+| Heatpump/Command/AmbientMinTemp | te10 | Minimum ambient temperature (T1) [-10-10°C]
+| Heatpump/TimeProgramHPM-F | tprg | Time Program HP M-F (True/False per hour of the day)
+| Heatpump/Command/TimeProgramHPM-F | tprg | Time Program HP M-F (True/False per hour of the day)
+| Heatpump/TimeProgramHPSat | tprg | Time Program HP Sat (True/False per hour of the day)
+| Heatpump/Command/TimeProgramHPSat | tprg | Time Program HP Sat (True/False per hour of the day)
+| Heatpump/TimeProgramHPSun | tprg | Time Program HP Sun (True/False per hour of the day)
+| Heatpump/Command/TimeProgramHPSun | tprg | Time Program HP Sun (True/False per hour of the day)
+| Heatpump/AntiFreezingEnabled | bool | Function protecting against freezing [YES/NO], factory setting YES
+| Heatpump/Command/AntiFreezingEnabled | bool | Function protecting against freezing [YES/NO], factory setting YES
+| Heatpump/WaterPumpOperationMode | word | Water Pump Operation Mode (0=Continuous, 1=Synchronous)
+| Heatpump/Command/WaterPumpOperationMode | word | Water Pump Operation Mode (0=Continuous, 1=Synchronous)
+| Heatpump/FanOperationMode | word | Fan Operation Mode (0=Max, 1=Min, 2=Day/Night), factory MAX
+| Heatpump/Command/FanOperationMode | word | Fan Operation Mode (0=Max, 1=Min, 2=Day/Night), factory MAX
+| Heatpump/DefrostingInterval | word | Defrosting cycle start-up delay [30-90 min., factory setting 45 min.]
+| Heatpump/Command/DefrostingInterval | word | Defrosting cycle start-up delay [30-90 min., factory setting 45 min.]
+| Heatpump/DefrostingStartTemp | te10 | Temperature activating defrosting [-30 - 0°C, factory setting -7°C]
+| Heatpump/Command/DefrostingStartTemp | te10 | Temperature activating defrosting [-30 - 0°C, factory setting -7°C]
+| Heatpump/DefrostingStopTemp | te10 | Temperature finishing defrosting [2-30°C, factory setting 13°C]
+| Heatpump/Command/DefrostingStopTemp | te10 | Temperature finishing defrosting [2-30°C, factory setting 13°C]
+| Heatpump/DefrostingMaxTime | word | Maximum defrosting duration [1-12 min., factory setting 8 min.]
+| Heatpump/Command/DefrostingMaxTime | word | Maximum defrosting duration [1-12 min., factory setting 8 min.]
+| Heatpump/ExtControllerHPOFF | bool | Heat pump deactivation [YES/NO, factory setting YES]
+| Heatpump/Command/ExtControllerHPOFF | bool | Heat pump deactivation [YES/NO, factory setting YES]
 
 ## Acknowledgements
 
