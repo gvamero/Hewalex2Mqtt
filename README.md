@@ -13,8 +13,8 @@ Heat Pump (Hewalex solmax)
 PCWU 2.5kW
 PCWU 3.0kW
 
-
 Provides read and write access on mqtt topics. A typical use case is integration of hewalex solar pumps and/or heat pumps in Home Automation (HA) software.
+
 This script is based on a domoticz plugin. So if you use domoticz a ready made plugin is available at: https://github.com/mvdklip/Domoticz-Hewalex
 
 ## Hardware Prerequisites
@@ -26,7 +26,7 @@ You can buy a (cheap) wifi 2 rs485 or ethernet 2 rs485 device wich you attach to
 
 ### Heat pumps (PCWU) setup
 
-Remove the plastic case and open up the "fuse box". In here you will find a spre rs485 connector. Remove it and screw in a 4 strand wire. Connect the wire to the rs485wifi device.
+Remove the plastic case and open up the "fuse box". In here you will find a free rs485 connector. Remove it and screw in a 4 strand wire. Connect the wire to the rs485wifi device.
 Make sure you connect them correctly. It is wise to measure ac and grnd to be sure!
 
 In the controller, navigate to rs485 settings. Change baud rate to 38500, Actual address to 2 and Logic address to 2.
@@ -48,7 +48,7 @@ https://www.openhab.org/
 Home Assistant
 https://www.home-assistant.io/
 
-But it'll work with any HA system that can process and send MQTT / Json messages.
+But it'll work with any HA system that can process and send MQTT messages.
 
 ## Using the script
 just run the python script hewalex2mqtt.py, or use the docker image.
@@ -89,8 +89,30 @@ When you are using docker, make sure to set the environment variables. Or use th
 
 
 ### Docker
-A pre made docker image is available at [todo]. 
+A pre made docker image is available at https://hub.docker.com/r/chibald/hewalex2mqtt. 
 
+```
+version: '3.3'
+services:
+
+  hewalex2mqtt:
+    image: chibald/hewalex2mqtt:latest
+    network_mode: host
+    environment:
+      MQTT_ip: 192.168.1.2
+      MQTT_port: 1883
+      MQTT_authentication: 'False'
+      MQTT_user: ''
+      MQTT_pass: ''
+      Device_Zps_Enabled: 'True'
+      Device_Zps_Address: '192.168.1.7'
+      Device_Zps_Port: 8899
+      Device_Zps_MqttTopic: 'SolarBoiler'
+      Device_Pcwu_Enabled: 'True'
+      Device_Pcwu_Address: '192.168.1.8'
+      Device_Pcwu_Port: '8899'
+      Device_Pcwu_MqttTopic: 'Heatpump'
+```
 
 ## MQTT Topics
 
@@ -282,6 +304,15 @@ Command topics (marked command) allow the sending of commands to topics to contr
 | Heatpump/Command/DefrostingMaxTime | word | Maximum defrosting duration [1-12 min., factory setting 8 min.]
 | Heatpump/ExtControllerHPOFF | bool | Heat pump deactivation [YES/NO, factory setting YES]
 | Heatpump/Command/ExtControllerHPOFF | bool | Heat pump deactivation [YES/NO, factory setting YES]
+
+### Examples
+Turn off heat pump
+`Heatpump/Command/HeatPumpEnabled False`
+
+Change T2 temperature setting to 52°C
+`Heatpump/Command/TapWaterTemp 52`
+
+etc. etc.
 
 ## Acknowledgements
 

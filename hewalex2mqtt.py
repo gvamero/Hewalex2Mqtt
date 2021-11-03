@@ -8,7 +8,7 @@ from hewalex_geco.devices import PCWU, ZPS
 import paho.mqtt.client as mqtt
 
 # polling interval
-get_status_interval = 150.0
+get_status_interval = 30.0
 
 # Controller (Master)
 conHardId = 1
@@ -173,8 +173,10 @@ def device_readregisters_enqueue():
     threading.Timer(get_status_interval, device_readregisters_enqueue).start()
     if _Device_Zps_Enabled:        
         readZPS()
+        # readZPSConfig() dont care fot this ona ATM
     if _Device_Pcwu_Enabled:        
         readPCWU()
+        readPcwuConfig()
 
 def readZPS():
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Zps_Address, _Device_Zps_Port))
@@ -217,10 +219,7 @@ def readPcwuConfig():
 def writePcwuConfig(registerName, payload):    
     ser = serial.serial_for_url("socket://%s:%s" % (_Device_Pcwu_Address, _Device_Pcwu_Port))
     dev = PCWU(conHardId, conSoftId, devHardId, devSoftId, on_message_serial)            
-    if dev.write(ser, registerName, payload):
-        print('written to serial')
-    else:
-        print('unable to write to serial. Check register (topic) name and value. ')
+    dev.write(ser, registerName, payload)
     ser.close()
 
 def printPcwuMqttTopics():        
