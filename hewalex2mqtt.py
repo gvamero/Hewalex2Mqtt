@@ -1,11 +1,11 @@
-print("Starting Hewalex 2 Mqtt")
-
 import os
 import threading
 import configparser
 import serial
 from hewalex_geco.devices import PCWU, ZPS
 import paho.mqtt.client as mqtt
+import logging
+import sys
 
 # polling interval
 get_status_interval = 30.0
@@ -23,9 +23,21 @@ flag_connected_mqtt = 0
 MessageCacheZps = {}
 MessageCachePcwu = {}
 
+# logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s :: %(name)s :: %(levelname)s :: %(message)s')
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setFormatter(formatter)
+stream_handler.setLevel(logging.DEBUG)
+logger.addHandler(stream_handler)
+
+# Start
+logger.info('Starting Hewalex 2 Mqtt')
+
 # Read Configs
 def initConfiguration():
-    print("reading config")
+    logger.info("reading config")
     config_file = os.path.join(os.path.dirname(__file__), 'hewalex2mqttconfig.ini')
     config = configparser.ConfigParser()
     config.read(config_file)
@@ -106,27 +118,27 @@ def initConfiguration():
 
 def start_mqtt():
     global client
-    print('Connection in progress to the Mqtt broker (IP:' +_MQTT_ip + ' PORT:'+str(_MQTT_port)+')')
+    logger.info('Connection in progress to the Mqtt broker (IP:' +_MQTT_ip + ' PORT:'+str(_MQTT_port)+')')
     client = mqtt.Client()
     if _MQTT_authentication:
-        print('Mqtt authentication enabled')
+        logger.info('Mqtt authentication enabled')
         client.username_pw_set(username=_MQTT_user, password=_MQTT_pass)
     client.on_connect = on_connect_mqtt
     client.on_disconnect = on_disconnect_mqtt
     client.on_message = on_message_mqtt        
     client.connect(_MQTT_ip, _MQTT_port)  
     if (_Device_Pcwu_Enabled):
-        print('subscribed to : ' + _Device_Pcwu_MqttTopic + '/Command/#')    
+        logger.info('subscribed to : ' + _Device_Pcwu_MqttTopic + '/Command/#')    
         client.subscribe(_Device_Pcwu_MqttTopic + '/Command/#', qos=1)
     client.loop_start()
 
 def on_connect_mqtt(client, userdata, flags, r):
-    print("Mqtt: Connected to broker. ")
+    logger.info("Mqtt: Connected to broker. ")
     global flag_connected_mqtt
     flag_connected_mqtt = 1
 
 def on_disconnect_mqtt(client, userdata, rc):
-    print("Mqtt: disconnected. ")
+    logger.info("Mqtt: disconnected. ")
     global flag_connected_mqtt
     flag_connected_mqtt = 0
 
@@ -138,38 +150,41 @@ def on_message_mqtt(client, userdata, message):
         # PCWU Command 
         if len(arr) == 3 and arr[0] == _Device_Pcwu_MqttTopic and arr[1] == 'Command':            
             command = arr[2]
-            print('Recieved PCWU command ' + topic)
+            logger.info('Recieved PCWU command ' + topic)
             writePcwuConfig(command, payload)
         else:
-            print('cannot process message on topic ' + topic)
+            logger.info('cannot process message on topic ' + topic)
 
     except Exception as e:
-        print('Exception in on_message_mqtt: '+ str(e))
+        logger.info('Exception in on_message_mqtt: '+ str(e))
 
 def on_message_serial(obj, h, sh, m):
-    if flag_connected_mqtt != 1:
-        return False
-    
-    if isinstance(obj, ZPS):
-        topic = _Device_Zps_MqttTopic
-        MessageCache = MessageCacheZps
-    elif isinstance(obj, PCWU):
-        topic = _Device_Pcwu_MqttTopic
-        MessageCache = MessageCachePcwu
+    try:    
+        if flag_connected_mqtt != 1:
+            return False
+        
+        if isinstance(obj, ZPS):
+            topic = _Device_Zps_MqttTopic
+            MessageCache = MessageCacheZps
+        elif isinstance(obj, PCWU):
+            topic = _Device_Pcwu_MqttTopic
+            MessageCache = MessageCachePcwu
 
-    if sh["FNC"] == 0x50:
-        mp = obj.parseRegisters(sh["RestMessage"], sh["RegStart"], sh["RegLen"])        
-        for item in mp.items():
-            if isinstance(item[1], dict): # skipping dictionaries (time program) 
-                continue
-            if item not in MessageCache or MessageCache[item] != item:
-                MessageCache[item] = item
-                print(topic + "/" + item[0] + " " + str(item[1]))
-                client.publish(topic + "/" + item[0], item[1])                        
+        if sh["FNC"] == 0x50:
+            mp = obj.parseRegisters(sh["RestMessage"], sh["RegStart"], sh["RegLen"])        
+            for item in mp.items():
+                if isinstance(item[1], dict): # skipping dictionaries (time program) 
+                    continue
+                if item not in MessageCache or MessageCache[item] != item:
+                    MessageCache[item] = item
+                    logger.info(topic + "/" + item[0] + " " + str(item[1]))
+                    client.publish(topic + "/" + item[0], item[1])                        
+    except Exception as e:
+        logger.info('Exception in on_message_serial: '+ str(e))
 
 def device_readregisters_enqueue():
     """Get device status every x seconds"""
-    print('Get device status')
+    logger.info('Get device status')
     threading.Timer(get_status_interval, device_readregisters_enqueue).start()
     if _Device_Zps_Enabled:        
         readZPS()
