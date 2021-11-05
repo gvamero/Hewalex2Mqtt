@@ -20,8 +20,7 @@ devSoftId = 2
 
 #mqtt
 flag_connected_mqtt = 0
-MessageCacheZps = {}
-MessageCachePcwu = {}
+MessageCache = {}
 
 # logging
 logger = logging.getLogger(__name__)
@@ -163,22 +162,23 @@ def on_message_serial(obj, h, sh, m):
         if flag_connected_mqtt != 1:
             return False
         
-        if isinstance(obj, ZPS):
-            topic = _Device_Zps_MqttTopic
-            MessageCache = MessageCacheZps
-        elif isinstance(obj, PCWU):
+        global MessageCache
+        topic = _Device_Zps_MqttTopic
+        if isinstance(obj, PCWU):
             topic = _Device_Pcwu_MqttTopic
-            MessageCache = MessageCachePcwu
-
+    
         if sh["FNC"] == 0x50:
             mp = obj.parseRegisters(sh["RestMessage"], sh["RegStart"], sh["RegLen"])        
             for item in mp.items():
                 if isinstance(item[1], dict): # skipping dictionaries (time program) 
                     continue
-                if item not in MessageCache or MessageCache[item] != item:
-                    MessageCache[item] = item
-                    logger.info(topic + "/" + item[0] + " " + str(item[1]))
-                    client.publish(topic + "/" + item[0], item[1])                        
+                key = topic + '/' + str(item[0])
+                val = str(item[1])
+                if key not in MessageCache or MessageCache[key] != val:
+                    MessageCache[key] = val
+                    logger.info(key + " " + val)
+                    client.publish(key, val)
+
     except Exception as e:
         logger.info('Exception in on_message_serial: '+ str(e))
 
@@ -188,7 +188,7 @@ def device_readregisters_enqueue():
     threading.Timer(get_status_interval, device_readregisters_enqueue).start()
     if _Device_Zps_Enabled:        
         readZPS()
-        # readZPSConfig() dont care fot this ona ATM
+        #readZPSConfig() dont care fot this ona ATM
     if _Device_Pcwu_Enabled:        
         readPCWU()
         readPcwuConfig()
