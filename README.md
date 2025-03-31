@@ -1,125 +1,78 @@
-A word of warning: to make use of this script you will have to connect a rs485 connector to your equipment. This means working on mains-voltage equipment so use your head. Always power down equipment before screwing them open and poking around in them. 
-Also, all of this software is provided AS-IS with no implied warranty or liability under sections 15, and 16 of the GPL V3. So whatever happens, it is not my fault ;)
+I created a personal copy from https://github.com/Chibald/Hewalex2Mqtt
+I followed the discussion on https://gathering.tweakers.net/forum/list_messages/2069540
+At the end i want to use AppDeamon, use jojan265 described the steps to be taken https://gathering.tweakers.net/forum/view_message/79522762 
+I think jojan265 created https://github.com/HJKLMN/HomeAssistant-Hewalex2MQTT, but it is not complete (e.g. jojan has not included devices like PCWU, which Chibald has) , so i updated my  repository with the files
+On top of these changes, i added mqtt and configration.yaml as these make they covert the mqtt messags into home assistant instances.
 
+I remove the remarks from Chibald readme.md that don't make sense for me
 # Hewalex 2 Mqtt
+Mqtt gateway for solar pump Hewalex ZPS-18e? with Geco controller G-422-P09(A)? and 
+Hewalex PCWU 3kW heat pump
 
-Mqtt gateway for hewalex heat pumps and solar pumps.
+It Provides read and write access on mqtt topics, from Home Assistant.
 
-Solar Pump Hewalex / Geco controllers
-G-422-P09
-G-422-P09A
+# Installation
+## Elfin EW11a
+Configure as TCP server
 
-Heat Pump (Hewalex solmax)
-PCWU 2.5kW
-PCWU 3.0kW
+### Warmtepomp
+Elfin voor Warmtepomp
+http://192.168.3.98 --> Communication settings --> Add 
+Basic Settings
+	Name: WP-HA
+	Protocol: TCP Server
+Socket Settings
+	Local Port: 9999
+	Buffer Size: 512
+	Keep Alive(s): 60
+	Timeout(s): 0
+Protocol Settings
+	Max Accept: 3
+More Settings
+	SecurityP: Disable
+	Route: UART
 
-Provides read and write access on mqtt topics. A typical use case is integration of hewalex solar pumps and/or heat pumps in Home Automation (HA) software.
+Elfin voor Zonneboiler
+Elfin voor Warmtepomp
+http://192.168.3.99 --> Communication settings --> Add 
+Basic Settings
+	Name: ZB-HA
+	Protocol: TCP Server
+Socket Settings
+	Local Port: 9999
+	Buffer Size: 512
+	Keep Alive(s): 60
+	Timeout(s): 0
+Protocol Settings
+	Max Accept: 3
+More Settings
+	SecurityP: Disable
+	Route: UART
 
-This script is based on a domoticz plugin. So if you use domoticz a ready made plugin is available at: https://github.com/mvdklip/Domoticz-Hewalex
+Debuggen Elfin settingsIOTService tools download address：
+Zie test tcp server https://shop.marcomweb.it/images/virtuemart/product/Elfin-EW1X_Operation%20GuideV1.2(20190924).pdf?srsltid=AfmBOoquue7C9qHPHE4yvlZNeSHuW_WBWr0ylf9ONFRQwkeYIfEpKPs7
+http://ftp.hi-flying.com:9000/IOTService/
 
-## Hardware Prerequisites
+### AppDeamon (Home Assistant)
 
-Hewalex devices are equipped with empty RS485 connectors. 
-This is basically a serial port. This script uses a 'serial for url' connection. 
-
-You can buy a (cheap) wifi 2 rs485 or ethernet 2 rs485 device wich you attach to the rs485 port you want to interface with. And you need a piece of wire with 4 strands.
-
-### Heat pumps (PCWU) setup
-
-Remove the plastic case and open up the "fuse box". In here you will find a free rs485 connector. Remove it and screw in a 4 strand wire. Connect the wire to the rs485wifi device.
-Make sure you connect them correctly. It is wise to measure ac and grnd to be sure!
-
-In the controller, navigate to rs485 settings. Change baud rate to 38500, Actual address to 2 and Logic address to 2.
-
-Setup the rs485-to-wifi device. Make sure baud settings match above settings.
-It is probably wise to assign static ip-address. Take note of this.
-
-### Solar pumps (ZPS) setup
-
-Remove G-422 controller from the casing. Connect the RS485 port on the backside of the G-422 controller to the wifi controller. 
-
-## Software Prerequisities
-
-You will need (and if you are reading this probably have) Home Automation software with/and MQTT broker.
-
-Openhab
-https://www.openhab.org/
-
-Home Assistant
-https://www.home-assistant.io/
-
-But it'll work with any HA system that can process and send MQTT messages.
+De scripts moeten in addon/configs/a0d7b954_appdaemon geplaatst worden.
+/addon_configs/a0d7b954_appdaemon/hewalex2mqtt.py
+/addon_configs/a0d7b954_appdaemon/hewalex2mqttconfig.ini
+/addon_configs/a0d7b954_appdaemon/hewalex_geco/devices/pcwu.py
+/addon_configs/a0d7b954_appdaemon/hewalex_geco/devices/zps.py
 
 ## Using the script
-just run the python script hewalex2mqtt.py, or use the docker image.
+just run the python script hewalex2mqtt.py
+Dependencies: from hewalex_geco.devices import PCWU
 
 ### Parameters
-All parameters are listed in the .ini file.
-Modify them according to your needs when you are not using the pre-made docker image.
-
-When you are using docker, make sure to set the environment variables. Or use the provided docker-compose and modify that accoriding to your setup.
-
-
-**MQTT**
-| Parameter | Value |
-| ----------------------- | ----------- |
-| MQTT_ip | 192.168.1.2
-| MQTT_port | 1883
-| MQTT_authentication | True
-| MQTT_user | 
-| MQTT_pass | 
-| MQTT_GatewayDevice_Topic | HewaGate
-
-**ZPS**
-| Parameter | Value |
-| ----------------------- | ----------- |
-| Device_Zps_Enabled | False
-| Device_Zps_Address | IP of the RS485 to Wi-Fi device eg. 192.168.1.7
-| Device_Zps_Port | Port of the RS485 to Wi-Fi device eg. 8899
-| Device_Zps_MqttTopic | SolarBoiler
-
-
-**Pcwu**
-| Parameter | Value |
-| ----------------------- | ----------- |
-| Device_Pcwu_Enabled | True
-| Device_Pcwu_Address | IP of the RS485 to Wi-Fi device eg. 192.168.1.8
-| Device_Pcwu_Port | Port of the RS485 to Wi-Fi device eg. 8899
-| Device_Pcwu_MqttTopic | Heatpump
-
-
-### Docker
-A pre made docker image is available at https://hub.docker.com/r/chibald/hewalex2mqtt. 
-
-```
-version: '3.3'
-services:
-
-  hewalex2mqtt:
-    image: chibald/hewalex2mqtt:latest
-    network_mode: host
-    environment:
-      MQTT_ip: 192.168.1.2
-      MQTT_port: 1883
-      MQTT_authentication: 'False'
-      MQTT_user: ''
-      MQTT_pass: ''
-      Device_Zps_Enabled: 'True'
-      Device_Zps_Address: '192.168.1.7'
-      Device_Zps_Port: 8899
-      Device_Zps_MqttTopic: 'SolarBoiler'
-      Device_Pcwu_Enabled: 'True'
-      Device_Pcwu_Address: '192.168.1.8'
-      Device_Pcwu_Port: '8899'
-      Device_Pcwu_MqttTopic: 'Heatpump'
-```
+All parameters are listed in the .ini file, which I modified to my needs.
 
 ## MQTT Topics
-
 There are 2 kinds of topics: state and command. 
 Command topics (marked command) allow the sending of commands to topics to control equipment.
 
-### Solar Pump
+### Solar Pump ZPS
 | Topic | Type | Description |
 | ----------------------- | ----------- | ---------------------------
 | SolarBoiler/date | date | Date
@@ -312,11 +265,11 @@ Turn off heat pump
 Change T2 temperature setting to 52°C
 `Heatpump/Command/TapWaterTemp 52`
 
-etc. etc.
-
 ## Acknowledgements
 
 Based on
 * https://github.com/mvdklip/Domoticz-Hewalex
 * https://www.elektroda.pl/rtvforum/topic3499254.html 
 * https://github.com/aelias-eu/hewalex-geco-protocol
+* https://github.com/Chibald/Hewalex2Mqtt
+* https://github.com/HJKLMN/HomeAssistant-Hewalex2MQTT
