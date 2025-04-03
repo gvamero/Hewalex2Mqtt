@@ -1,10 +1,13 @@
 I created a personal copy from https://github.com/Chibald/Hewalex2Mqtt
 I followed the discussion on https://gathering.tweakers.net/forum/list_messages/2069540
-At the end i want to use AppDeamon, use jojan265 described the steps to be taken https://gathering.tweakers.net/forum/view_message/79522762 
-I think jojan265 created https://github.com/HJKLMN/HomeAssistant-Hewalex2MQTT, but it is not complete (e.g. jojan has not included devices like PCWU, which Chibald has) , so i updated my  repository with the files
-On top of these changes, i added mqtt and configration.yaml as these make they covert the mqtt messags into home assistant instances.
+At the end i want to use AppDeamon, user jojan265 described the steps to be taken https://gathering.tweakers.net/forum/view_message/79522762 
+I think jojan265 created https://github.com/HJKLMN/HomeAssistant-Hewalex2MQTT, but it is not complete (e.g. jojan has not included devices like PCWU, which Chibald has) , so i updated 
+HJKLMN repository with the missing files from Chibald.
 
-I remove the remarks from Chibald readme.md that don't make sense for me
+On top of these changes, i added mqtt and configuration.yaml (see https://www.home-assistant.io/integrations/sensor.mqtt/) as these make they covert the mqtt messags into home assistant instances.
+The YAML files are located in the root installation folder of where you installed Home Assistant
+Do not overwrite the existing files as these contain parameters for other Home Assistant components. Instead add the contents of the new files to the existing files.
+
 # Hewalex 2 Mqtt
 Mqtt gateway for solar pump Hewalex ZPS-18e? with Geco controller G-422-P09(A)? and 
 Hewalex PCWU 3kW heat pump
@@ -257,6 +260,183 @@ Command topics (marked command) allow the sending of commands to topics to contr
 | Heatpump/Command/DefrostingMaxTime | word | Maximum defrosting duration [1-12 min., factory setting 8 min.]
 | Heatpump/ExtControllerHPOFF | bool | Heat pump deactivation [YES/NO, factory setting YES]
 | Heatpump/Command/ExtControllerHPOFF | bool | Heat pump deactivation [YES/NO, factory setting YES]
+
+
+### extend configuration.yamlmqtt:
+  switch:
+    - name: "Heatpump On"
+      command_topic: "Heatpump/Command/HeatPumpEnabled"
+      payload_on: "True"
+      payload_off: "False"
+      state_on: "On"
+      state_off: "Off"
+      unique_id: hewalex_heatpump_on_switch
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Hewalex Heatpump"
+    - name: "Heatpump Deactivation"
+      command_topic: "Heatpump/Command/ExtControllerHPOFF"
+      payload_on: "True"
+      payload_off: "False"
+      state_on: "On"
+      state_off: "Off"
+      unique_id: hewalex_heatpump_extcontrol_switch
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Hewalex Heatpump"
+  number:
+    - name: "Hewalex Heatpump Set Hysteresis"
+      command_topic: "Heatpump/Command/TapWaterHysteresis"
+      state_topic: "Heatpump/TapWaterHysteresis"
+      unit_of_measurement: "°C"
+      max: "10"
+      unique_id: "hewalex_heatpump_hysteresis_set"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex Heatpump Set Tapwater Temp"
+      command_topic: "Heatpump/Command/TapWaterTemp"
+      state_topic: "Heatpump/TapWaterTemp"
+      unit_of_measurement: "°C"
+      max: "60"
+      min: "40"
+      unique_id: "hewalex_heatpump_tapwater_set"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+  sensor:
+    - name: "Hewalex T1 Ambient Temp"
+      state_topic: "Heatpump/T1"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_t1"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Hewalex Heatpump"
+    - name: "Hewalex T2 Bottom Tank Temp"
+      state_topic: "Heatpump/T2"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_t2"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex T3 Top Tank Temp"
+      state_topic: "Heatpump/T3"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_t3"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex T6 HP Water Inlet Temp"
+      state_topic: "Heatpump/T6"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_t6"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex T7 HP Water Outlet Temp)"
+      state_topic: "Heatpump/T7"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_t7"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex T8 HP Evaporator Temp"
+      state_topic: "Heatpump/T8"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_t8"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex T9 HP Pre Compressor Temp)"
+      state_topic: "Heatpump/T9"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_t9"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex T10 HP Post Compressor Temp)"
+      state_topic: "Heatpump/T10"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_t10"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex HP Temp Setting"
+      state_topic: "Heatpump/TapWaterTemp"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_tapwater"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex HP Status"
+      state_topic: "Heatpump/HeatPumpEnabled"
+      unique_id: "hewalex_heatpump_status"
+      value_template: >-
+        {% if value == "True" %}
+             On
+        {% else %}
+            Off
+        {% endif %}
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex HP Hysteresis"
+      state_topic: "Heatpump/TapWaterHysteresis"
+      unit_of_measurement: "°C"
+      unique_id: "hewalex_heatpump_hysteresis"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex HP Circulation Pump"
+      state_topic: "Heatpump/CirculationPumpON"
+      unique_id: "hewalex_heatpump_waterpump"
+      value_template: >-
+        {% if value == "True" %}
+             On
+        {% else %}
+            Off
+        {% endif %}
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex HP Fan"
+      state_topic: "Heatpump/FanON"
+      unique_id: "hewalex_heatpump_fan"
+      value_template: >-
+        {% if value == "True" %}
+             On
+        {% else %}
+            Off
+        {% endif %}
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+    - name: "Hewalex HP Expansion Valve"
+      state_topic: "Heatpump/EV1"
+      unit_of_measurement: "-/-"
+      unique_id: "hewalex_heatpump_ev1"
+      device:
+        identifiers:
+          - "hewalex_heatpump"
+        name: "Heatpump Hewalex"
+
 
 ### Examples
 Turn off heat pump
