@@ -1,10 +1,10 @@
-I created a personal copy from https://github.com/Chibald/Hewalex2Mqtt
-I followed the discussion on https://gathering.tweakers.net/forum/list_messages/2069540
-At the end i want to use AppDeamon, user jojan265 described the steps to be taken https://gathering.tweakers.net/forum/view_message/79522762 
+Created copy from https://github.com/Chibald/Hewalex2Mqtt
+Followed the discussion on https://gathering.tweakers.net/forum/list_messages/2069540
+I want to use AppDeamon, user jojan265 described the steps to be taken https://gathering.tweakers.net/forum/view_message/79522762 
 I think jojan265 created https://github.com/HJKLMN/HomeAssistant-Hewalex2MQTT, but it is not complete (e.g. jojan has not included devices like PCWU, which Chibald has) , so i updated 
 HJKLMN repository with the missing files from Chibald.
 
-On top of these changes, i added mqtt and configuration.yaml (see https://www.home-assistant.io/integrations/sensor.mqtt/) as these make they covert the mqtt messags into home assistant instances.
+On top of these changes, i added mqtt.yaml and modified this Readme.yaml (see https://www.home-assistant.io/integrations/sensor.mqtt/) as these make they covert the mqtt messags into home assistant instances.
 The YAML files are located in the root installation folder of where you installed Home Assistant
 Do not overwrite the existing files as these contain parameters for other Home Assistant components. Instead add the contents of the new files to the existing files.
 
@@ -17,6 +17,7 @@ It Provides read and write access on mqtt topics, from Home Assistant.
 # Installation
 ## Elfin EW11a
 Configure as TCP server
+Test with "C:\Users\gertj\OneDrive\Documenten\Zonneboiler\Zonneboiler set\Pompgroep en control\Elfin EW11A\TCP\TCPUDPDbg.exe
 
 ### Warmtepomp
 Elfin voor Warmtepomp
@@ -25,7 +26,7 @@ Basic Settings
 	Name: WP-HA
 	Protocol: TCP Server
 Socket Settings
-	Local Port: 9999
+	Local Port: 502
 	Buffer Size: 512
 	Keep Alive(s): 60
 	Timeout(s): 0
@@ -52,17 +53,17 @@ More Settings
 	SecurityP: Disable
 	Route: UART
 
-Debuggen Elfin settingsIOTService tools download address：
-Zie test tcp server https://shop.marcomweb.it/images/virtuemart/product/Elfin-EW1X_Operation%20GuideV1.2(20190924).pdf?srsltid=AfmBOoquue7C9qHPHE4yvlZNeSHuW_WBWr0ylf9ONFRQwkeYIfEpKPs7
+Debuggen Elfin settings ：
+Zie test tcp server
 http://ftp.hi-flying.com:9000/IOTService/
 
 ### AppDeamon (Home Assistant)
 
 De scripts moeten in addon/configs/a0d7b954_appdaemon geplaatst worden.
-/addon_configs/a0d7b954_appdaemon/hewalex2mqtt.py
-/addon_configs/a0d7b954_appdaemon/hewalex2mqttconfig.ini
-/addon_configs/a0d7b954_appdaemon/hewalex_geco/devices/pcwu.py
-/addon_configs/a0d7b954_appdaemon/hewalex_geco/devices/zps.py
+/addon_configs/a0d7b954_appdaemon/apps/hewalex2mqtt.py
+/addon_configs/a0d7b954_appdaemon/apps/hewalex2mqttconfig.ini
+/addon_configs/a0d7b954_appdaemon/apps/hewalex_geco/devices/pcwu.py
+/addon_configs/a0d7b954_appdaemon/apps/hewalex_geco/devices/zps.py
 
 ## Using the script
 just run the python script hewalex2mqtt.py

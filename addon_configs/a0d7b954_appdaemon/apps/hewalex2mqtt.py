@@ -19,12 +19,12 @@ class Hewalex2MQTT(hass.Hass):
         self.get_status_interval = 30.0
         
         # Controller (Master)
-        self.conHardId = 1
-        self.conSoftId = 1
+        self.conHardId = 3
+        self.conSoftId = 3
         
         # PCWU (Slave)
-        self.devHardId = 2
-        self.devSoftId = 2
+        self.devHardId = 4
+        self.devSoftId = 4
 
         #mqtt
         self.flag_connected_mqtt = 0
