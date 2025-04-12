@@ -19,12 +19,12 @@ class Hewalex2MQTT(hass.Hass):
         self.get_status_interval = 30.0
         
         # Controller (Master)
-        self.conHardId = 3
-        self.conSoftId = 3
+        self.conHardId = 4
+        self.conSoftId = 4
         
         # PCWU (Slave)
-        self.devHardId = 4
-        self.devSoftId = 4
+        self.devHardId = 3
+        self.devSoftId = 3
 
         #mqtt
         self.flag_connected_mqtt = 0
@@ -228,8 +228,7 @@ class Hewalex2MQTT(hass.Hass):
         #self.logger.info(f'readPCWUConfig: {ser}')
         self.dev.readConfigRegisters(ser)
         ser.close()
-  
-   
+
     def printPcwuMqttTopics(self):        
         print('| Topic | Type | Description | ')
         print('| ----------------------- | ----------- | ---------------------------')
@@ -243,8 +242,6 @@ class Hewalex2MQTT(hass.Hass):
                 print('| ' +_Device_Pcwu_MqttTopic + '/' + str(v['name'])+ ' | ' + v['type'] + ' | ' + str(v.get('desc')))
             if k > dev.REG_CONFIG_START:          
                 print('| ' + _Device_Pcwu_MqttTopic + '/Command/' + str(v['name']) + ' | ' + v.get('type') + ' | ' + str(v.get('desc')))
-
-
 
 if __name__ == "__main__":
     # Create an instance of your AppDaemon app
