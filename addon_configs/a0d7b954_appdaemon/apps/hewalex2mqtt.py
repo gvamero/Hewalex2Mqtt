@@ -1,256 +1,287 @@
+"""AppDaemon app to read data from Hewalex ZPS and PCWU devices and publish to MQTT/HA.
+
+Program Flow:
+------------
+1. INITIALIZATION:
+   - Loads configuration from apps.yaml (polling interval, device addresses, IDs, etc.)
+   - Validates required parameters for enabled devices (PCWU/ZPS)
+   - Initializes device handlers with controller/device IDs
+
+2. RUNTIME OPERATION:
+   - Starts automatic polling loop (configurable interval)
+   └── For each enabled device:
+       a) Establishes serial-over-socket connection
+       b) Reads status registers via device-specific protocol
+       c) Parses response into key-value pairs
+       d) Publishes changes to MQTT topics
+       e) Updates Home Assistant sensor entities
+
+3. DATA PROCESSING:
+   - Implements message caching to avoid duplicate updates
+   - Auto-detects sensor types (temperature/pressure/flow) for HA metadata
+   - Handles device responses asynchronously via callback
+
+4. AUXILIARY FEATURES:
+   - Manual refresh via service call (hewalex2mqtt/refresh)
+   - Graceful error handling for serial comms and parsing
+   - Detailed logging at multiple levels (DEBUG to ERROR)
+
+Configuration:
+--------------
+Requires serial-over-socket access to devices. Each device type (PCWU/ZPS) needs:
+- IP address and port
+- Controller/device hardware/software IDs
+- Optional: MQTT topic prefix (default: 'hewalex/[pcwu|zps]')
+"""""
+
 import appdaemon.plugins.hass.hassapi as hass
-import os
-import threading
-import configparser
 import serial
-from hewalex_geco.devices import PCWU
-import paho.mqtt.client as mqtt
-import logging
-import sys
+from hewalex_geco.devices import PCWU, ZPS
+from typing import Optional, Dict, Any, Union
 
-# The class definition for the AppDaemon app
-class Hewalex2MQTT(hass.Hass):
-    # Declare dev as a class attribute
-    dev = None
-
-    # Your app initialization logic here
-    def initialize(self):
-        # polling interval
-        self.get_status_interval = 30.0
-        
-        # Controller (Master)
-        self.conHardId = 4
-        self.conSoftId = 4
-        
-        # PCWU (Slave)
-        self.devHardId = 3
-        self.devSoftId = 3
-
-        #mqtt
-        self.flag_connected_mqtt = 0
-        self.MessageCache = {}
-
-        # Initialize the logger
-        self.initLogger()
-
-        # Initialize the configuration first
-        self.initConfiguration()
-
-        # Start MQTT connection
-        self.start_mqtt()
-
-        # Declare dev as a class attribute
-        self.dev = PCWU(self.conHardId, self.conSoftId, self.devHardId, self.devSoftId, self.on_message_serial)
-
-        # Call device_readregisters_enqueue to start the periodic task
-        self.device_readregisters_enqueue()
-
-    def initLogger(self):
-        # Set up the logger
-        self.logger = logging.getLogger(__name__)
-        self.logger.setLevel(logging.INFO)
-        
-        # Controleer of de logger al handlers heeft om dubbele logging te voorkomen
-        if not self.logger.hasHandlers():
-            formatter = logging.Formatter('%(asctime)s :: %(name)s :: %(levelname)s :: %(message)s')
-            stream_handler = logging.StreamHandler(sys.stdout)
-            stream_handler.setFormatter(formatter)
-            stream_handler.setLevel(logging.INFO)
-            
-            # Voeg alleen de handler toe als er nog geen handler is
-            self.logger.addHandler(stream_handler)
-        
-        self.logger.info("Initializing Hewalex 2 Mqtt")
-
-    # Read Configs
-    def initConfiguration(self):
-        self.logger.info("reading config")
-        config_file = os.path.join(os.path.dirname(__file__), 'hewalex2mqttconfig.ini')
-        config = configparser.ConfigParser()
-        config.read(config_file)
+class Hewalex2MqttApp(hass.Hass):
+    """Main application class for Hewalex device integration."""
     
-        # Mqtt
-        self._MQTT_ip = config.get('MQTT', 'MQTT_ip')
-        self._MQTT_port = config.getint('MQTT', 'MQTT_port')
-        self._MQTT_authentication = config.getboolean('MQTT', 'MQTT_authentication')
-        self._MQTT_user = config.get('MQTT', 'MQTT_user')
-        self._MQTT_pass = config.get('MQTT', 'MQTT_pass')
-        self.logger.info(f'MQTT ip: {self._MQTT_ip}')
-        self.logger.info(f'MQTT port: {self._MQTT_port}')
-        self.logger.info(f'MQTT authentication: {self._MQTT_authentication}')
-        self.logger.info(f'MQTT user: {self._MQTT_user}')
-        self.logger.info(f'MQTT pass: {self._MQTT_pass}')
-
-        # PCWU Device
-        self._Device_Pcwu_Enabled = config.getboolean('Pcwu', 'Device_Pcwu_Enabled')
-        if self._Device_Pcwu_Enabled:
-            self._Device_Pcwu_Address = config.get('Pcwu', 'Device_Pcwu_Address')
-            self._Device_Pcwu_Port = config.getint('Pcwu', 'Device_Pcwu_Port')
-            self._Device_Pcwu_MqttTopic = config.get('Pcwu', 'Device_Pcwu_MqttTopic')
-            self.logger.info(f'Device_Pcwu_MqttTopic: {self._Device_Pcwu_MqttTopic}')
-    
-        # Use the values as needed in your app
-        if self._Device_Pcwu_Enabled:
-            # Create the serial connection with the correct baudrate
-            # Do something with self._Device_Pcwu_Address, self._Device_Pcwu_Port, and self._Device_Pcwu_MqttTopic
-            # For example, assign them to class attributes
-            pass
-        else:
-            # Handle the case when Pcwu is not enabled
-            pass
-
-    def on_message_mqtt(self, client, userdata, message):
-        self.logger.info("Received message with topic: {}".format(message.topic))
-        self.logger.info("Received command: {}".format(message.payload.decode('utf-8')))
-
-        # Verwerkt commando's bedoeld voor PCWU-apparaat
-        if message.topic.startswith(f"{self._Device_Pcwu_MqttTopic}/Command/"):
-            register_name = message.topic.split('/')[-1]  # Extract the register name from the topic
-            command_value = message.payload.decode('utf-8')
-            self.logger.info(f"Received command to set {register_name} to {command_value}")
-            self.writePcwuConfig(register_name, command_value)
-        else:
-            # Handle other MQTT messages if needed
-            self.logger.info("Received unrelated MQTT message, no action taken.")
+    def initialize(self) -> None:
+        """Initialize the application with configuration."""
+        self.log("Initializing Hewalex2Mqtt App", level="INFO")
         
-    def writePcwuConfig(self, registerName, payload):
-        # Log the attempt to write to the PCWU device
-        self.logger.info(f"Attempting to write to register: {registerName} with value: {payload}")
+        # Validate and load configuration
+        if not self._validate_config():
+            self.log("Invalid configuration, app will not start", level="ERROR")
+            return
+        
+        # Initialize device connections
+        self._init_devices()
+        
+        # Register service for manual refresh
+        self.register_service("hewalex2mqtt/refresh", self.handle_refresh_service)
+        
+        # Start polling loop
+        self.run_every(self.read_devices, self.datetime(), self.polling_interval)
+        self.log("Hewalex2Mqtt App initialized successfully", level="INFO")
+
+    def _validate_config(self) -> bool:
+        """Validate the configuration from apps.yaml."""
         try:
-        # Open the serial connection
-            with serial.serial_for_url(f"socket://{self._Device_Pcwu_Address}:{self._Device_Pcwu_Port}", baudrate=38400, timeout=2, write_timeout=2) as ser:
-                # Call the write function on the PCWU device
-                result = self.dev.write(ser, registerName, payload)
-                # Check if the write was successful
-                if result:
-                    self.logger.info(f"Successfully wrote {payload} to {registerName}")
-                else:
-                    self.logger.error(f"Failed to write {payload} to {registerName}")
-        except Exception as e:
-            self.logger.error(f"Error writing to PCWU: {e}")
-
-
-
-    # Define flag_connected_mqtt as a global variable at the beginning of the script
-    #flag_connected_mqtt = 0
-    def log_mqtt_status(self, kwargs):
-        if self.flag_connected_mqtt == 1:
-            self.logger.info("MQTT Broker is connected.")
-        else:
-            self.logger.info("MQTT Broker is disconnected.")
-
-    def start_mqtt(self):
-        self.mqtt_client = mqtt.Client()
-        if self._MQTT_authentication:
-            self.mqtt_client.username_pw_set(username=self._MQTT_user, password=self._MQTT_pass)
+            self.polling_interval = float(self.args.get("polling_interval", 10.0))
+            if self.polling_interval <= 0:
+                raise ValueError("Polling interval must be positive")
             
-        self.mqtt_client.on_connect = self.on_mqtt_connect
-        self.mqtt_client.on_disconnect = self.on_mqtt_disconnect
-        self.mqtt_client.on_message = self.on_message_mqtt
-        # self.mqtt_client.enable_logger(self.logger)
-        self.mqtt_client.connect(self._MQTT_ip, self._MQTT_port)
-        if self._Device_Pcwu_Enabled:
-            self.logger.info('Subscribed to: ' + self._Device_Pcwu_MqttTopic + '/Command/#')
-            self.mqtt_client.subscribe(self._Device_Pcwu_MqttTopic + '/Command/#', qos=1)
-
-        self.mqtt_client.loop_start()
-    
-    def on_mqtt_connect(self, client, userdata, flags, rc):
-        self.logger.info("Verbonden to MQTT Broker with result code: {}".format(rc))
-        # Update dit om te abonneren op het correcte topic dat overeenkomt met je MQTT configuratie voor PCWU
-        base_topic = f"{self._Device_Pcwu_MqttTopic}/#"  # Abonneer op alle subtopics onder je basis PCWU topic
-        self.mqtt_client.subscribe(base_topic)
-        self.logger.info(f"ABBOSubscribed to MQTT topic: {base_topic}")
-        self.flag_connected_mqtt = 1
-    
-    def on_mqtt_disconnect(self, client, userdata, rc):
-        self.logger.info("Disconnected from MQTT Broker with result code: {}".format(rc))
-        self.flag_connected_mqtt = 0
-    
-    def on_message_serial(self, obj, h, sh, m):
-        #self.logger.info(f'on_message_serial flag_connected_mqtt: {self.flag_connected_mqtt}')
-        #self.logger.info('on_message_serial')
-        #self.logger.info(f'MessageCache obj: {obj}')
-        #self.logger.info(f'MessageCache h: {h}')
-        #self.logger.info(f'MessageCache sh: {sh}')
-        #self.logger.info(f'MessageCache m: {m}')
-        try:    
-            if self.flag_connected_mqtt != 1:
-                self.logger.info('on_message_serial not connected to mqtt')
-                return False
+            # PCWU config validation
+            self.pcwu_enabled = self.args.get("pcwu_enabled", False)
+            if self.pcwu_enabled:
+                if not all(key in self.args for key in ["pcwu_address", "pcwu_port"]):
+                    raise ValueError("PCWU enabled but missing required configuration")
+                
+                self.pcwu_address = str(self.args["pcwu_address"])
+                self.pcwu_port = int(self.args["pcwu_port"])
+                self.pcwu_topic = str(self.args.get("pcwu_topic", "hewalex/pcwu"))
+                self.pcwu_chid = int(self.args.get("pcwu_controller_hard_id", 3))
+                self.pcwu_csid = int(self.args.get("pcwu_controller_soft_id", 3))
+                self.pcwu_dhid = int(self.args.get("pcwu_device_hard_id", 4))
+                self.pcwu_dsid = int(self.args.get("pcwu_device_soft_id", 4))
             
-            global MessageCache
-            topic = self._Device_Pcwu_MqttTopic
-            if sh["FNC"] == 0x50:
-                mp = obj.parseRegisters(sh["RestMessage"], sh["RegStart"], sh["RegLen"])        
-                for item in mp.items():
-                    if isinstance(item[1], dict): # skipping dictionaries (time program) 
-                        continue
-                    key = topic + '/' + str(item[0])
-                    val = str(item[1])
-                    if key not in self.MessageCache or self.MessageCache[key] != val:
-                        self.MessageCache[key] = val
-                        self.logger.info(key + " " + val)
-                        self.mqtt_client.publish(key, val)
-    
+            # ZPS config validation
+            self.zps_enabled = self.args.get("zps_enabled", False)
+            if self.zps_enabled:
+                if not all(key in self.args for key in ["zps_address", "zps_port"]):
+                    raise ValueError("ZPS enabled but missing required configuration")
+                
+                self.zps_address = str(self.args["zps_address"])
+                self.zps_port = int(self.args["zps_port"])
+                self.zps_topic = str(self.args.get("zps_topic", "hewalex/zps"))
+                self.zps_chid = int(self.args.get("zps_controller_hard_id", 1))
+                self.zps_csid = int(self.args.get("zps_controller_soft_id", 1))
+                self.zps_dhid = int(self.args.get("zps_device_hard_id", 2))
+                self.zps_dsid = int(self.args.get("zps_device_soft_id", 2))
+            
+            self.message_cache: Dict[str, str] = {}
+            self._devices_initialized = False
+            return True
+            
         except Exception as e:
-            self.logger.info('Exception in on_message_serial: '+ str(e))
-    
-    def device_readregisters_enqueue(self):
-        """Get device status every x seconds"""
-        #self.logger.info('Get device status')
-        #self.logger.info(f'device_readregisters_enqueue flag_connected_mqtt: {self.flag_connected_mqtt}')
-        threading.Timer(self.get_status_interval, self.device_readregisters_enqueue).start()
-        if self._Device_Pcwu_Enabled:        
-            self.readPCWU()
-            self.readPcwuConfig()
+            self.log(f"Configuration error: {str(e)}", level="ERROR")
+            return False
 
-    def readPCWU(self):    
-        # Controleer en log de waarden van de attributen
-        self.logger.info(f"Connecting to PCWU at {self._Device_Pcwu_Address}:{self._Device_Pcwu_Port}")
+    def _init_devices(self) -> None:
+        """Initialize device instances."""
         try:
-            with serial.serial_for_url(f"socket://{self._Device_Pcwu_Address}:{self._Device_Pcwu_Port}") as ser:
-                self.logger.info("Serial connection established.")
-                self.dev = PCWU(self.conHardId, self.conSoftId, self.devHardId, self.devSoftId, self.on_message_serial)
-                read_data = self.dev.readStatusRegisters(ser)
-                # Log alleen of er data ontvangen is of niet, zonder de data zelf te tonen
-                if read_data:
-                    self.logger.info("Data successfully received from PCWU.")
-                else:
-                    self.logger.info("No data received from PCWU.")
+            if self.pcwu_enabled:
+                self.pcwu_device = PCWU(
+                    self.pcwu_chid, self.pcwu_csid, 
+                    self.pcwu_dhid, self.pcwu_dsid, 
+                    self.handle_response
+                )
+            
+            if self.zps_enabled:
+                self.zps_device = ZPS(
+                    self.zps_chid, self.zps_csid,
+                    self.zps_dhid, self.zps_dsid,
+                    self.handle_response
+                )
+            
+            self._devices_initialized = True
+            self.log("Devices initialized successfully", level="INFO")
         except Exception as e:
-            self.logger.error(f"Error in readPCWU: {e}")
+            self.log(f"Device initialization failed: {str(e)}", level="ERROR")
+            self._devices_initialized = False
 
-    
-    def readPcwuConfig(self):    
-        #self.logger.info(f'readPcwuConfig flag_connected_mqtt: {self.flag_connected_mqtt}')
-        ser = serial.serial_for_url("socket://%s:%s" % (self._Device_Pcwu_Address, self._Device_Pcwu_Port), baudrate=38400, timeout=2)
-        #self.logger.info(f'readPCWUConfig: {ser}')
-        self.dev.readConfigRegisters(ser)
-        ser.close()
+    def read_devices(self, kwargs: Dict[str, Any]) -> None:
+        """Read data from all enabled devices."""
+        if not self._devices_initialized:
+            self.log("Devices not initialized, skipping read", level="WARNING")
+            return
+        
+        if self.pcwu_enabled:
+            self._read_single_device(
+                device=self.pcwu_device,
+                address=self.pcwu_address,
+                port=self.pcwu_port,
+                topic_prefix=self.pcwu_topic,
+                device_type="PCWU"
+            )
+        
+        if self.zps_enabled:
+            self._read_single_device(
+                device=self.zps_device,
+                address=self.zps_address,
+                port=self.zps_port,
+                topic_prefix=self.zps_topic,
+                device_type="ZPS"
+            )
 
-    def printPcwuMqttTopics(self):        
-        print('| Topic | Type | Description | ')
-        print('| ----------------------- | ----------- | ---------------------------')
-        dev = PCWU(self.conHardId, self.conSoftId, self.devHardId, self.devSoftId, on_message_serial)
-        for k, v in dev.registers.items():
-            if isinstance(v['name'] , list):
-                for i in v['name']:
-                    if i:
-                        print('| ' + _Device_Pcwu_MqttTopic + '/' + str(i) + ' | ' + v['type'] + ' | ' + str(v.get('desc')))
-            else:
-                print('| ' +_Device_Pcwu_MqttTopic + '/' + str(v['name'])+ ' | ' + v['type'] + ' | ' + str(v.get('desc')))
-            if k > dev.REG_CONFIG_START:          
-                print('| ' + _Device_Pcwu_MqttTopic + '/Command/' + str(v['name']) + ' | ' + v.get('type') + ' | ' + str(v.get('desc')))
+    def _read_single_device(
+        self,
+        device: Union[PCWU, ZPS],
+        address: str,
+        port: int,
+        topic_prefix: str,
+        device_type: str
+    ) -> None:
+        """Read data from a single device with proper error handling."""
+        ser = None
+        try:
+            self.log(f"Reading {device_type} device at {address}:{port}", level="DEBUG")
+            ser = serial.serial_for_url(f"socket://{address}:{port}", timeout=2)
+            device.readStatusRegisters(ser)
+        except serial.SerialException as e:
+            self.log(f"Serial communication error with {device_type}: {str(e)}", level="ERROR")
+        except Exception as e:
+            self.log(f"Unexpected error reading {device_type}: {str(e)}", level="ERROR")
+        finally:
+            if ser is not None:
+                try:
+                    ser.close()
+                except Exception as e:
+                    self.log(f"Error closing serial connection: {str(e)}", level="WARNING")
 
-if __name__ == "__main__":
-    # Create an instance of your AppDaemon app
-    app = MyApp()
-    # Initialize the configuration
-    app.initConfiguration()
-    # Start MQTT connection
-    app.start_mqtt()
-    # Add this line to log the MQTT status periodically (e.g., every 60 seconds)
-    app.run_every(app.log_mqtt_status, datetime.datetime.now(), 20)
-    # Run the AppDaemon app
-    app.run()
+    def handle_response(
+        self,
+        device: Union[PCWU, ZPS],
+        h: Dict[str, Any],
+        sh: Dict[str, Any],
+        m: Dict[str, Any]
+    ) -> None:
+        """Handle response from device and update MQTT/HA."""
+        if sh.get("FNC") != 0x50:
+            self.log("Received non-status response, ignoring", level="DEBUG")
+            return
+
+        try:
+            topic_prefix = self.pcwu_topic if isinstance(device, PCWU) else self.zps_topic
+            device_name = "PCWU" if isinstance(device, PCWU) else "ZPS"
+            
+            mp = device.parseRegisters(sh["RestMessage"], sh["RegStart"], sh["RegLen"])
+            
+            for key, value in mp.items():
+                if isinstance(value, dict):
+                    continue
+                
+                self._process_sensor_value(
+                    device_name=device_name,
+                    topic_prefix=topic_prefix,
+                    sensor_key=key,
+                    sensor_value=value
+                )
+                
+        except KeyError as e:
+            self.log(f"Missing expected key in response: {str(e)}", level="ERROR")
+        except Exception as e:
+            self.log(f"Error processing device response: {str(e)}", level="ERROR")
+
+    def _process_sensor_value(
+        self,
+        device_name: str,
+        topic_prefix: str,
+        sensor_key: str,
+        sensor_value: Any
+    ) -> None:
+        """Process and publish a single sensor value."""
+        try:
+            topic = f"{topic_prefix}/{sensor_key}"
+            value = str(sensor_value)
+            entity_id = f"sensor.{device_name.lower()}_{sensor_key}".replace(" ", "_")
+            
+            # Only update if value changed
+            if topic not in self.message_cache or self.message_cache[topic] != value:
+                self.message_cache[topic] = value
+                
+                # Publish to MQTT
+                self.call_service(
+                    "mqtt/publish",
+                    topic=topic,
+                    payload=value,
+                    retain=True
+                )
+                
+                # Update HA entity
+                self.set_state(
+                    entity_id,
+                    state=value,
+                    attributes={
+                        "friendly_name": f"{device_name} {sensor_key}",
+                        "device_class": self._determine_device_class(sensor_key),
+                        "unit_of_measurement": self._determine_unit(sensor_key)
+                    }
+                )
+                
+                self.log(
+                    f"Updated {device_name} {sensor_key} = {value}",
+                    level="DEBUG"
+                )
+                
+        except Exception as e:
+            self.log(f"Error processing sensor {sensor_key}: {str(e)}", level="ERROR")
+
+    def _determine_device_class(self, sensor_key: str) -> Optional[str]:
+        """Determine device class based on sensor key."""
+        key = sensor_key.lower()
+        if "temp" in key:
+            return "temperature"
+        elif "pressure" in key:
+            return "pressure"
+        elif "flow" in key:
+            return None  # No standard device class for flow
+        return None
+
+    def _determine_unit(self, sensor_key: str) -> Optional[str]:
+        """Determine unit of measurement based on sensor key."""
+        key = sensor_key.lower()
+        if "temp" in key:
+            return "°C"
+        elif "pressure" in key:
+            return "bar"
+        elif "flow" in key:
+            return "l/min"
+        return None
+
+    def handle_refresh_service(self, service: str, data: Dict[str, Any]) -> None:
+        """Handle manual refresh service call."""
+        self.log("Manual refresh triggered via service call", level="INFO")
+        self.read_devices({})
+
+    def terminate(self) -> None:
+        """Clean up resources when app is stopped."""
+        self.log("Hewalex2Mqtt App terminating", level="INFO")
+        # Add any cleanup logic needed here
